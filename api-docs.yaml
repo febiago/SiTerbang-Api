@@ -1,0 +1,621 @@
+openapi: 3.0.0
+info:
+  title: SiTerbang API
+  description: SiTerbang API Documentation
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:3000
+    description: Localhost
+  - url: https://siterbang-api-test.km3ggwp.com
+    desription: Deployment on railway
+
+tags:
+  - Auth
+  - Airplane
+  - Airlines
+  - Product
+
+paths:
+  /auth/register:
+    post:
+      summary: Register New Account
+      description: Register New Account For Buyer
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                confirm_password:
+                  type: string
+            examples:
+              example-body:
+                value:
+                  name: John Doe
+                  email: johndoe@mail.com
+                  password: admin123
+                  confirm_password: admin123
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                      password:
+                        type: string
+              examples:
+                regist-user:
+                  value:
+                    status: true
+                    message: Register success
+                    data:
+                      name: John Doe
+                      email: johndoe@mail.com
+                      password: admin123
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data: null
+              examples:
+                doesn't-match-password:
+                  value:
+                    status: false
+                    message: Password doesn't match
+                    data: null
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data: null
+              examples:
+                email-exist:
+                  value:
+                    status: false
+                    message: Email already exist
+                    data: null
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /auth/login:
+    post:
+      summary: Login Account
+      description: Login Account
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+            exampless:
+              login-examples:
+                value:
+                  email: johndoe@gmail.com
+                  password: admin123
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                      token:
+                        type: string
+              examples:
+                status-example:
+                  value:
+                    status: true
+                    message: login success
+                    data:
+                      email: johndoe@gmail.com
+                      token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJkZWRlbnNldHlhd2FuMTdAZ21haWwuY29tIiwicm9sZSI6IkJVWUVSIiwiaWF0IjoxNjY5NDYwNTg0LCJleHAiOjE2Njk0NjQxODR9.UpEBOEZ4sVQfWhtzsdcJRUoJyROBVl8z6W528rMtYaY
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data: null
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /auth/google:
+    post:
+      summary: Login or Register Google
+      description: Login or Register With Google
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+            examples:
+              example-body:
+                value:
+                  access_token: "ya29.a0AX9GBdVioT6WPTHQp_k75q1enKbSqBaR-f936Jdysoyij--_0Siod3SnsyMz73t15zjOxRzDpCf_I8IQ4y-G4q0Phoy9EO9qIbPFsnSR0m0ugTRsO6irrvtqFrYM3nXPbYELMliv20KPUrhAu4lUdxG19BTuaCgYKASsSARESFQHUCsbCPYMDsvqdITSHMSeLMqToJg0163"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                      role:
+                        type: string
+                      token:
+                        type: string
+              examples:
+                status-ok:
+                  value:
+                    status: true
+                    message: "success"
+                    data:
+                      email: "johndoe@gmail.com"
+                      role: "GOOGLE"
+                      token: ""
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data: null
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+  /auth/get:
+    get:
+      summary: Get All User
+      description: Gell All User
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      emailToken:
+                        type: string
+                      password:
+                        type: string
+                      phone:
+                        type: string
+                      gender:
+                        type: string
+                      address:
+                        type: string
+                      postal_code:
+                        type: string
+                      photo:
+                        type: string
+                      is_verified:
+                        type: string
+                      user_type:
+                        type: string
+                      role:
+                        type: string
+                      token:
+                        type: string
+  /auth/forgot-password:
+    post:
+      summary: Forgot Password Account
+      description: Request Forgot Password Account Via Email
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+            examples:
+              example-body:
+                value:
+                  email: johndoe@mail.com
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                  properties:
+                    status:
+                      type: boolean
+                    message:
+                      type: string
+                    data:
+                      type: object
+                      properties:
+                        email:
+                          type: string
+              examples:
+                forgot-password:
+                  value:
+                    status: true
+                    message: request forgot-password successful
+                    data:
+                      email: johndoe@gmail.com
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+  /auth/reset-password/{token}:
+    post:
+      summary: Reset Password
+      description: Reset Password Account
+      tags: 
+        - Auth
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: token
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                confirm_password:
+                  type: string
+            examples:
+              reset-password:
+                password: admin123
+                confirm_password: admin123
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                succesfull:
+                  value:
+                    status: true
+                    message: Update Password Success
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+              examples:
+                password-doesn't-match:
+                  value:
+                    status: false
+                    message: Password Doesn't Match
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data: null
+              examples:
+                unauthorized:
+                  value:
+                    status: false
+                    message: invalid token
+        '500':
+          description: Internal Service Error
+  /airlines:
+    get:
+      summary: Get All Airlines By Search
+      description:
+      tags:
+        - Airlines
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: booelan
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: boolean
+                      message:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          phone:
+                            type: string
+              examples:
+                status-ok:
+                  value:
+                    status: true
+                    message: "Success"
+                    data:
+                      name: "Garuda Indonesia"
+                      phone: "086736247823"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data: null
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data: null
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Create Airline
+      description: Create An Airline
+      tags:
+        - Airlines
+      security:
+        bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                phone:
+                  type: string
+            examples:
+              example-body:
+                value:
+                  name: "Citilink"
+                  phone: "081235761"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      phone:
+                        type: string
+              examples:
+                status-ok:
+                  value:
+                    status: true
+                    message: "success"
+                    data:
+                      name: "Citilink"
+                      phone: "081235761"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data: null
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data: null
+        '500':
+          description: Internal Server Error
+  /airlines/all:
+    get:
+      summary: Get All Airlines
+      description: Get All Airlines
+      tags:
+        - Airlines
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      phone:
+                        type: string
+
+  
+          
+
+  
+    
+
+
+
+                      
+    
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+                
+      
+      
+                        
+
+
+                      
+components:
+  schemas: {}
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security schema
+      type: http
+      scheme: bearer

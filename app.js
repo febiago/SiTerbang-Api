@@ -1,49 +1,56 @@
-require('dotenv').config();
-const express = require('express');
+require("dotenv").config();
+
+const { PORT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } =
+  process.env;
+
+const express = require("express");
+const morgan = require("morgan");
+const xss = require("xss-clean");
 const app = express();
-const PORT = process.env.PORT || 3000;
-const { User } = require('./models');
-const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator');
+const routes = require("./routes");
+const webpush = require("web-push");
+const cors = require("cors");
+const YAML = require("yamljs");
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    return res.status(200).json({
-        status: true,
-        message: 'test build docker image sendiri!'
-    });
+// SWAGGER
+const swaggerUi = require("swagger-ui-express");
+const apiDocumentation = YAML.load("./api-docs.yaml");
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(apiDocumentation));
+
+app.set("view engine", "ejs");
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan("dev"));
+app.use(xss());
+app.use(cors());
+
+app.use(routes);
+
+// Main
+app.get("/", (req, res) => {
+  return res.status(200).send("Welcome -- SiTerbang API");
 });
 
-app.get('/add-data', async (req, res, next) => {
-    try {
-        const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] }); // big_red_donkey
-
-        const user = await User.create({
-            name: randomName
-        });
-
-        return res.status(200).json({
-            status: true,
-            message: 'berhasil',
-            data: user.name
-        });
-    } catch (err) {
-        next(err);
-    }
+// Handling error not found!
+app.use((req, res, next) => {
+  return res.status(404).json({
+    status: false,
+    message: "are you lost?",
+    data: null,
+  });
 });
 
-app.get('/get-data', async (req, res, next) => {
-    try {
-        const user = await User.findAll();
-
-        return res.status(200).json({
-            status: true,
-            message: 'berhasil',
-            data: user
-        });
-    } catch (err) {
-        next(err);
-    }
+// Handling error internal server error!
+app.use((err, req, res, next) => {
+  console.log(err);
+  return res.status(500).json({
+    status: false,
+    message: err.message,
+    data: null,
+  });
 });
 
-app.listen(PORT, () => console.log('listening on port', PORT));
+app.listen(PORT, () =>
+  console.log(`running on port ${PORT} || http://localhost:${PORT}`)
+);
